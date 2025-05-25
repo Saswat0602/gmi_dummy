@@ -11,10 +11,35 @@ services:
     env_file:
       - .env
     depends_on:
-      - pg
+      - db
+    networks:
+      - backend_pg
+
+  db:
+    image: postgres:15
+    container_name: gmi_dummy_db
+    restart: always
+    environment:
+      POSTGRES_DB: gmi_dummy
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend_pg
+
+  adminer:
+    image: adminer
+    container_name: gmi_dummy_adminer
+    restart: always
+    ports:
+      - "8080:8080"
     networks:
       - backend_pg
 
 networks:
   backend_pg:
     external: true
+
+volumes:
+  pgdata:
