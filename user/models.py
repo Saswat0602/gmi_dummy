@@ -19,3 +19,4 @@ class User(AbstractUser):
     role = models.CharField(max_length=100)  # Global role
     region_ids = models.JSONField(default=list)  # List of region IDs
     is_verified = models.BooleanField(default=False)  # Email verification status
+

@@ -14,9 +14,10 @@ from reports.models import Report, Sign
 from versionsheets.models import VersionSheet
 from tasks.models import Task, Stamp
 from documents.models import Document
-from user.models import EmailToken
+from authflow.models import EmailToken
 
 User = get_user_model()
+
 
 class Command(BaseCommand):
     help = 'Seed database with sample data'
@@ -25,49 +26,52 @@ class Command(BaseCommand):
         self.stdout.write("Deleting old data...")
         self.clear_data()
 
-        self.stdout.write("Creating users...")
-        users = self.create_users()
+        try:
+            self.stdout.write("Creating users...")
+            users = self.create_users()
 
-        self.stdout.write("Creating projects...")
-        projects = self.create_projects(users)
+            self.stdout.write("Creating projects...")
+            projects = self.create_projects(users)
 
-        self.stdout.write("Creating version sheets...")
-        versionsheets = self.create_version_sheets()
+            self.stdout.write("Creating version sheets...")
+            versionsheets = self.create_version_sheets(projects)
 
-        self.stdout.write("Creating sheets...")
-        sheets = self.create_sheets(projects, versionsheets, users)
+            self.stdout.write("Creating sheets...")
+            sheets = self.create_sheets(projects, versionsheets, users)
 
-        self.stdout.write("Creating photos...")
-        photos = self.create_photos(projects, sheets, users)
+            self.stdout.write("Creating photos...")
+            photos = self.create_photos(projects, sheets, users)
 
-        self.stdout.write("Creating documents...")
-        self.create_documents(projects)
+            self.stdout.write("Creating documents...")
+            self.create_documents(projects)
 
-        self.stdout.write("Creating photo annotations...")
-        self.create_photo_annotations(photos, projects, users)
+            self.stdout.write("Creating photo annotations...")
+            self.create_photo_annotations(photos, projects, users)
 
-        self.stdout.write("Creating reports...")
-        reports = self.create_reports(projects, photos, users)
+            self.stdout.write("Creating reports...")
+            reports = self.create_reports(projects, photos, users)
 
-        self.stdout.write("Creating signs...")
-        self.create_signs(reports, users)
+            self.stdout.write("Creating signs...")
+            self.create_signs(reports, users)
 
-        self.stdout.write("Creating stamps...")
-        stamps = self.create_stamps(projects)
+            self.stdout.write("Creating stamps...")
+            stamps = self.create_stamps(projects)
 
-        self.stdout.write("Creating tasks...")
-        self.create_tasks(projects, sheets, reports, photos, stamps, users)
+            self.stdout.write("Creating tasks...")
+            self.create_tasks(projects, sheets, reports, photos, stamps, users)
 
-        self.stdout.write("Creating project user roles...")
-        self.create_project_user_roles(projects, users)
+            self.stdout.write("Creating project user roles...")
+            self.create_project_user_roles(projects, users)
 
-        self.stdout.write("Creating email tokens...")
-        self.create_email_tokens(users)
+            self.stdout.write("Creating email tokens...")
+            self.create_email_tokens(users)
 
-        self.stdout.write(self.style.SUCCESS("Database seeded successfully!"))
+            self.stdout.write(self.style.SUCCESS("✅ Database seeded successfully!"))
+
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"❌ Seeding failed: {e}"))
 
     def clear_data(self):
-        # Delete in reverse order due to FK dependencies
         EmailToken.objects.all().delete()
         Task.objects.all().delete()
         Stamp.objects.all().delete()
@@ -111,17 +115,18 @@ class Command(BaseCommand):
                 officers={"officer1": "Name1", "officer2": "Name2"},
                 last_task_num=0
             )
-            # Add users to projects
-            project.users.set(users[:3])  # First 3 users
+            project.users.set(users[:3])  # Assign first 3 users
             projects.append(project)
         return projects
 
-    def create_version_sheets(self):
+    def create_version_sheets(self, projects):
         versionsheets = []
-        for i in range(1, 6):
+        for i, project in enumerate(projects):
             vs = VersionSheet.objects.create(
                 id=uuid.uuid4(),
-                # Add any required fields here if VersionSheet has required fields
+                project=project,
+                name=f'Version Sheet {i + 1}',
+                issuance_date=timezone.now().date()
             )
             versionsheets.append(vs)
         return versionsheets
@@ -171,7 +176,6 @@ class Command(BaseCommand):
                 is_temporarily_present=False,
                 is_annotation=False,
             )
-            # Add many-to-many relation with sheets (random 2 sheets)
             photo.sheets.set(sheets[i % len(sheets): (i % len(sheets)) + 2])
             photos.append(photo)
         return photos
@@ -214,7 +218,6 @@ class Command(BaseCommand):
                 created_by=users[i % len(users)],
                 updated_by=users[(i + 1) % len(users)],
             )
-            # ManyToMany photos (2 photos)
             report.photos.set(photos[i % len(photos): (i % len(photos)) + 2])
             reports.append(report)
         return reports
@@ -259,7 +262,6 @@ class Command(BaseCommand):
                 description=f'Task description {i + 1}',
                 created_by=users[i % len(users)],
             )
-            # Assign users to assigned_to and watching M2M
             task.assigned_to.set(users[:2])
             task.watching.set(users[2:4])
 
@@ -267,11 +269,12 @@ class Command(BaseCommand):
         roles = ['manager', 'member', 'viewer']
         for i, project in enumerate(projects):
             for j, user in enumerate(users[:3]):
-                ProjectUserRole.objects.create(
-                    project=project,
-                    user=user,
-                    role=roles[(i + j) % len(roles)]
-                )
+                if not ProjectUserRole.objects.filter(project=project, user=user).exists():
+                    ProjectUserRole.objects.create(
+                        project=project,
+                        user=user,
+                        role=roles[(i + j) % len(roles)]
+                    )
 
     def create_email_tokens(self, users):
         for i, user in enumerate(users):
