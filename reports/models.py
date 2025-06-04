@@ -6,8 +6,6 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-# Remove: from tasks.models import Task
-
 class Report(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
@@ -18,17 +16,13 @@ class Report(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='reports')
-    
+
     name = models.CharField(max_length=255)
-    template_id = models.CharField(max_length=255)  # e.g., "foreman_daily_report"
+    template_id = models.CharField(max_length=255)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='draft')
 
     data = models.JSONField(default=dict, blank=True)
-
-    # Use string reference for tasks
     photos = models.ManyToManyField(Photo, related_name='reports', blank=True)
-    signs = models.ManyToManyField('reports.Sign', related_name='reports', blank=True)
-    tasks = models.ManyToManyField('tasks.Task', related_name='reports', blank=True)  # string reference
 
     published = models.BooleanField(default=False)
 
@@ -43,3 +37,20 @@ class Report(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.status})"
+
+
+class Sign(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='signatures')
+
+    name = models.CharField(max_length=255)
+    file_url = models.URLField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def project(self):
+        return self.report.project
+
+    def __str__(self):
+        return f"Sign by {self.name}"

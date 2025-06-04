@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'tasks',
     'reports',
     'versionsheets',
-    'signs',
     'documents',
     
 ]

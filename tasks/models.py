@@ -4,7 +4,6 @@ from django.conf import settings
 from projects.models import Project
 from sheets.models import Sheet
 from photos.models import Photo
-# Remove: from reports.models import Report
 
 class Stamp(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -18,7 +17,7 @@ class Task(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
     
     sheet = models.ForeignKey(Sheet, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
-    report = models.ForeignKey('reports.Report', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')  # Use string here
+    report = models.ForeignKey('reports.Report', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
     photos = models.ManyToManyField(Photo, related_name='tasks', blank=True)
     stamp = models.ForeignKey(Stamp, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
     
@@ -40,3 +39,4 @@ class Task(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+  
