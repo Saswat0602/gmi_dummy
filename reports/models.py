@@ -42,10 +42,12 @@ class Report(models.Model):
 class Sign(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='signatures')
-
+    Key= models.CharField(max_length=255, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='signatures')
+    rawUrl = models.URLField(blank=True, null=True)
+    thumbnailUrl = models.URLField(blank=True, null=True)
     name = models.CharField(max_length=255)
-    file_url = models.URLField()
-
+    file_url = models.URLField(blank=True, null=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
