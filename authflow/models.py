@@ -13,7 +13,7 @@ class EmailToken(models.Model):
         (PASSWORD_RESET, 'Password Reset'),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='email_tokens')
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     token_type = models.CharField(max_length=50, choices=TOKEN_TYPE_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)

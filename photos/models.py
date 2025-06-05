@@ -25,13 +25,13 @@ class Photo(models.Model):
 
     is_temporarily_present = models.BooleanField(default=False)
     is_annotation = models.BooleanField(default=False)
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='uploaded_photos')
 
 class PhotoAnnotation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     photo = models.ForeignKey(Photo, on_delete=models.CASCADE, related_name='photoannotations')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='photoannotations')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='photo_annotations')
     published = models.BooleanField(default=False)
     type = models.CharField(max_length=100)
     shape_data = models.JSONField()

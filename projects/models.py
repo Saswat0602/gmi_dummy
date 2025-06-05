@@ -25,8 +25,8 @@ class Project(models.Model):
 
 
 class ProjectUserRole(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='project_user_roles')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_project_roles')
     role = models.CharField(max_length=100)
 
     class Meta:
